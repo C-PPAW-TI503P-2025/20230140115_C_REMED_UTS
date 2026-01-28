@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library System | UCP 1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #22d3ee;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        header h1 {
+            font-size: 3rem;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+
+        .stat-card h3 {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .book-card {
+            background: var(--card-bg);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: fadeInUp 0.6s ease-out both;
+        }
+
+        .book-card:hover {
+            transform: scale(1.02);
+            border-color: var(--primary);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .book-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+        }
+
+        .book-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .book-author {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .badge-stock {
+            background: rgba(34, 211, 238, 0.1);
+            color: var(--accent);
+        }
+
+        .badge-out {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .btn-borrow {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: 0.8rem;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-borrow:hover:not(:disabled) {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-borrow:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #475569;
+        }
+
+        /* Modal / Toast Notification */
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--primary);
+            transform: translateY(200%);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        #toast.show {
+            transform: translateY(0);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .navbar {
+            padding: 1.5rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text);
+        }
+
+        .user-id-input {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            color: var(--text);
+            outline: none;
+        }
+
+        .user-id-input:focus {
+            border-color: var(--primary);
+        }
+
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                </svg>
+                LibNext
+            </div>
+            <div>
+                <span style="font-size: 0.8rem; color: var(--text-muted); margin-right: 0.5rem;">User ID:</span>
+                <input type="number" id="userIdInput" class="user-id-input" value="115" placeholder="Simulasi ID">
+            </div>
+        </nav>
+
+        <header>
+            <h1>Library Management</h1>
+            <p>Sistem Manajemen Perpustakaan Pintar dengan Geolocation</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Koleksi</h3>
+                <div class="value" id="totalBooks">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Buku Tersedia</h3>
+                <div class="value" id="availableBooks">0</div>
+            </div>
+            <div class="stat-card" style="border-color: var(--success)">
+                <h3>Geolocation</h3>
+                <div class="value" style="font-size: 1.2rem; color: var(--success)">Ready ✨</div>
+            </div>
+        </div>
+
+        <div class="book-grid" id="bookGrid">
+            <!-- Books will be loaded here -->
+        </div>
+    </div>
+
+    <div id="toast">Message here</div>
+
+    <script>
+        const bookGrid = document.getElementById('bookGrid');
+        const userIdInput = document.getElementById('userIdInput');
+        const toast = document.getElementById('toast');
+
+        function showToast(msg, isError = false) {
+            toast.innerText = msg;
+            toast.style.borderColor = isError ? 'var(--danger)' : 'var(--primary)';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        async function fetchBooks() {
+            try {
+                const res = await fetch('/api/books');
+                const result = await res.json();
+
+                if (result.success) {
+                    displayBooks(result.data);
+                    document.getElementById('totalBooks').innerText = result.pagination.total;
+                    document.getElementById('availableBooks').innerText = result.data.filter(b => b.stock > 0).length;
+                }
+            } catch (err) {
+                console.error('Error fetching books:', err);
+            }
+        }
+
+        function displayBooks(books) {
+            bookGrid.innerHTML = books.map((book, index) => `
+                <div class="book-card" style="animation-delay: ${index * 0.1}s">
+                    <div class="badge ${book.stock > 0 ? 'badge-stock' : 'badge-out'}">
+                        ${book.stock > 0 ? `Tersedia: ${book.stock}` : 'Stok Habis'}
+                    </div>
+                    <h2 class="book-title">${book.title}</h2>
+                    <div class="book-author">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        ${book.author}
+                    </div>
+                    <button class="btn-borrow" 
+                            onclick="borrowBook(${book.id}, this)" 
+                            ${book.stock <= 0 ? 'disabled' : ''}>
+                        <span class="btn-text">Pinjam Sekarang</span>
+                        <div class="loader"></div>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        async function borrowBook(bookId, btn) {
+            const btnText = btn.querySelector('.btn-text');
+            const loader = btn.querySelector('.loader');
+            const userId = userIdInput.value;
+
+            if (!userId) {
+                return showToast('Masukkan User ID terlebih dahulu!', true);
+            }
+
+            // Get location
+            btn.disabled = true;
+            btnText.style.display = 'none';
+            loader.style.display = 'block';
+
+            if (!navigator.geolocation) {
+                showToast('Browser Anda tidak mendukung Geolocation', true);
+                resetButton(btn, btnText, loader);
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const { latitude, longitude } = position.coords;
+
+                try {
+                    const res = await fetch('/api/borrow', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-user-role': 'user',
+                            'x-user-id': userId
+                        },
+                        body: JSON.stringify({ bookId, latitude, longitude })
+                    });
+
+                    const result = await res.json();
+                    if (result.success) {
+                        showToast(`🚀 Berhasil meminjam! Lokasi: ${latitude.toFixed(2)}, ${longitude.toFixed(2)}`);
+                        fetchBooks(); // Refresh list
+                    } else {
+                        showToast(result.message, true);
+                    }
+                } catch (err) {
+                    showToast('Gagal menghubungi server', true);
+                } finally {
+                    resetButton(btn, btnText, loader);
+                }
+            }, (err) => {
+                showToast('Gagal mendapatkan lokasi. Pastikan izin lokasi aktif.', true);
+                resetButton(btn, btnText, loader);
+            });
+        }
+
+        function resetButton(btn, text, loader) {
+            btn.disabled = false;
+            text.style.display = 'block';
+            loader.style.display = 'none';
+        }
+
+        // Initial load
+        fetchBooks();
+    </script>
+</body>
+
+</html>
